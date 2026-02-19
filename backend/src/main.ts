@@ -25,4 +25,4 @@ async function bootstrap() {
   console.log('🚀 API rodando em http://localhost:3001/api/v1');
 }
 
-bootstrap();
+void bootstrap();

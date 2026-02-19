@@ -24,6 +24,7 @@ jest.mock('../../hooks/useAuth', () => ({
 }));
 
 jest.mock('react-router-dom', () => ({
+  __esModule: true,
   ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
 }));
