@@ -1,7 +1,6 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
 import { LoginPage } from './LoginPage';
 
 const mockLogin = jest.fn();
@@ -16,40 +15,32 @@ jest.mock('../../hooks/useAuth', () => ({
 }));
 
 jest.mock('react-router-dom', () => ({
-  ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
+  Link: ({ children }: { children: unknown }) => children,
 }));
-
-function renderLoginPage() {
-  return render(
-    <MemoryRouter>
-      <LoginPage />
-    </MemoryRouter>,
-  );
-}
 
 describe('LoginPage', () => {
   beforeEach(() => jest.clearAllMocks());
 
   it('deve exibir o título TaskFlow', () => {
-    renderLoginPage();
+    render(<LoginPage />);
     expect(screen.getByText('TaskFlow')).toBeInTheDocument();
   });
 
   it('deve exibir campos de email e senha', () => {
-    renderLoginPage();
+    render(<LoginPage />);
     expect(screen.getByPlaceholderText('seu@email.com')).toBeInTheDocument();
     expect(screen.getByPlaceholderText('••••••')).toBeInTheDocument();
   });
 
   it('deve exibir botão de entrar', () => {
-    renderLoginPage();
+    render(<LoginPage />);
     expect(screen.getByRole('button', { name: /entrar/i })).toBeInTheDocument();
   });
 
   it('deve chamar login ao submeter', async () => {
     mockLogin.mockResolvedValue({ user: {}, token: 'token' });
-    renderLoginPage();
+    render(<LoginPage />);
 
     await userEvent.type(
       screen.getByPlaceholderText('seu@email.com'),
@@ -68,7 +59,7 @@ describe('LoginPage', () => {
 
   it('deve exibir erro quando login falha', async () => {
     mockLogin.mockRejectedValue(new Error('Credenciais inválidas'));
-    renderLoginPage();
+    render(<LoginPage />);
 
     await userEvent.type(
       screen.getByPlaceholderText('seu@email.com'),
