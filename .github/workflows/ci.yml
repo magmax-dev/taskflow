@@ -1,0 +1,113 @@
+# Nome do workflow — aparece na aba Actions do GitHub
+name: CI Pipeline
+
+# Quando esse workflow roda
+on:
+  # Em qualquer push para qualquer branch
+  push:
+    branches: ['**']
+  # Em pull requests direcionados para a main
+  pull_request:
+    branches: [main]
+
+# Cancela runs anteriores da mesma branch se uma nova começar
+# Evita desperdício de minutos do GitHub Actions
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+
+  # ============================================
+  # JOB 1: Testes do Backend
+  # ============================================
+  test-backend:
+    name: 🧪 Backend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      # Baixa o código do repositório para a máquina virtual
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      # Instala o Node.js na versão correta
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          # Cache acelera a instalação nas próximas runs
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      # npm ci é mais rápido e determinístico que npm install
+      # Usa exatamente as versões do package-lock.json
+      - name: Instalar dependências
+        working-directory: backend
+        run: npm ci
+
+      # Verifica erros de código antes de rodar os testes
+      - name: Lint
+        working-directory: backend
+        run: npm run lint
+
+      # Roda os testes e gera relatório de cobertura
+      - name: Testes unitários
+        working-directory: backend
+        run: npm run test:cov
+
+  # ============================================
+  # JOB 2: Testes do Frontend
+  # ============================================
+  test-frontend:
+    name: 🧪 Frontend Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout código
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Instalar dependências
+        working-directory: frontend
+        run: npm ci
+
+      # CI=true faz o React não abrir o browser
+      # e falhar no primeiro erro em vez de continuar
+      - name: Testes
+        working-directory: frontend
+        run: CI=true npm test -- --watchAll=false --coverage
+
+      # Verifica se o projeto builda sem erros
+      # Pega problemas de TypeScript que os testes não pegam
+      - name: Build de produção
+        working-directory: frontend
+        run: CI=false npm run build
+        env:
+          REACT_APP_API_URL: http://localhost:3001/api/v1
+
+  # ============================================
+  # JOB 3: Notificação de resultado
+  # Roda sempre, mesmo se os outros falharem
+  # ============================================
+  notify:
+    name: 📊 Resultado
+    runs-on: ubuntu-latest
+    needs: [test-backend, test-frontend]
+    if: always()
+
+    steps:
+      - name: Pipeline passou
+        if: ${{ needs.test-backend.result == 'success' && needs.test-frontend.result == 'success' }}
+        run: echo "✅ Todos os testes passaram!"
+
+      - name: Pipeline falhou
+        if: ${{ needs.test-backend.result == 'failure' || needs.test-frontend.result == 'failure' }}
+        run: |
+          echo "❌ Testes falharam!"
+          exit 1
