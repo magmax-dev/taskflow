@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { BrowserRouter } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { LoginPage } from './LoginPage';
 
 const mockLogin = jest.fn();
@@ -22,9 +22,9 @@ jest.mock('react-router-dom', () => ({
 
 function renderLoginPage() {
   return render(
-    <BrowserRouter>
+    <MemoryRouter>
       <LoginPage />
-    </BrowserRouter>,
+    </MemoryRouter>,
   );
 }
 
@@ -47,38 +47,38 @@ describe('LoginPage', () => {
     expect(screen.getByRole('button', { name: /entrar/i })).toBeInTheDocument();
   });
 
-  it('deve chamar login com email e senha ao submeter', async () => {
+  it('deve chamar login ao submeter', async () => {
     mockLogin.mockResolvedValue({ user: {}, token: 'token' });
     renderLoginPage();
 
-    userEvent.type(
+    await userEvent.type(
       screen.getByPlaceholderText('seu@email.com'),
-      'joao@email.com'
+      'joao@email.com',
     );
-    userEvent.type(
+    await userEvent.type(
       screen.getByPlaceholderText('••••••'),
-      'senha123'
+      'senha123',
     );
-    userEvent.click(screen.getByRole('button', { name: /entrar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /entrar/i }));
 
     await waitFor(() => {
       expect(mockLogin).toHaveBeenCalledWith('joao@email.com', 'senha123');
     });
   });
 
-  it('deve exibir mensagem de erro quando login falha', async () => {
+  it('deve exibir erro quando login falha', async () => {
     mockLogin.mockRejectedValue(new Error('Credenciais inválidas'));
     renderLoginPage();
 
-    userEvent.type(
+    await userEvent.type(
       screen.getByPlaceholderText('seu@email.com'),
-      'errado@email.com'
+      'errado@email.com',
     );
-    userEvent.type(
+    await userEvent.type(
       screen.getByPlaceholderText('••••••'),
-      'senhaerrada'
+      'senhaerrada',
     );
-    userEvent.click(screen.getByRole('button', { name: /entrar/i }));
+    await userEvent.click(screen.getByRole('button', { name: /entrar/i }));
 
     await waitFor(() => {
       expect(screen.getByText('Credenciais inválidas')).toBeInTheDocument();
