@@ -84,24 +84,24 @@ describe('AuthService', () => {
   // =============================================
   describe('login', () => {
     it('deve retornar usuário e token com credenciais corretas', async () => {
+      // Para testar o caminho feliz do login precisamos de um hash real
+      // Geramos um hash verdadeiro do bcrypt para a senha 'senha123'
+      const bcrypt = await import('bcryptjs');
+      const senhaReal = await bcrypt.hash('senha123', 10);
+
       const mockUser = {
         _id: 'user-id-123',
         name: 'João Silva',
         email: 'joao@email.com',
-        password: '$2a$12$hashedpassword',
+        password: senhaReal, // hash real que o bcrypt consegue comparar
       };
 
       mockUsersService.findByEmail.mockResolvedValue(mockUser);
       mockJwtService.sign.mockReturnValue('token-fake-123');
 
-      // Mock do bcrypt para não precisar de hash real no teste
-      jest.mock('bcryptjs', () => ({
-        compare: jest.fn().mockResolvedValue(true),
-      }));
-
       const result = await authService.login('joao@email.com', 'senha123');
 
-      expect(result).toHaveProperty('token');
+      expect(result).toHaveProperty('token', 'token-fake-123');
       expect(result.user.email).toBe('joao@email.com');
     });
 
