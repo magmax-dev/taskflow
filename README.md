@@ -297,15 +297,3 @@ JWT_EXPIRES_IN=7d
 # Frontend (para configuração de CORS)
 FRONTEND_URL=http://localhost:3000
 ```
-
-> ⚠️ **Nunca suba o arquivo `.env` para o repositório.** Ele já está listado no `.gitignore`.
-
----
-
-## 📄 Licença
-
-Este projeto está sob a licença MIT. Veja o arquivo [LICENSE](LICENSE) para mais detalhes.
-
----
-
-<p align="center">Feito com 💜 durante o tutorial fullstack com Claude (Anthropic)</p>
